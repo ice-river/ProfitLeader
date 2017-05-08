@@ -1,5 +1,3 @@
-package uestc.dm.lab;
-
 import java.util.ArrayList;
 import java.util.concurrent.ExecutionException;
 
