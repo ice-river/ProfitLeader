@@ -1,0 +1,238 @@
+public class dealData {
+
+	
+	Node[] nodeset;
+	int maxNodeId = 0;
+	public double underDelta;
+	public int nodeSum;
+	public int[][] edgeSetEntry;
+	int maxdegree = 0;
+	double avedegree = 0;
+	int allNodes = 0;
+	int allEdges = 0;
+	
+	
+	public void load(String filepath){
+		HashSet<Integer> nodes = new HashSet<Integer>();
+		ArrayList<String> edgeset = new ArrayList<>();
+		try {
+			File f = new File(filepath);
+			InputStream is = new FileInputStream(f);
+			InputStreamReader isr = new InputStreamReader(is);
+			BufferedReader br = new BufferedReader(isr);
+			
+			String str;
+			
+			while ((str = br.readLine()) != null) {
+					String[] strs = str.split("\\s+");
+					int s = Integer.parseInt(strs[0]);
+					int t = Integer.parseInt(strs[1]);
+					String pair = s + "\t" + t;
+					edgeset.add(pair);
+					nodes.add(s);
+					nodes.add(t);
+					maxNodeId = maxNodeId > s ? maxNodeId : s;
+					maxNodeId = maxNodeId > t ? maxNodeId : t;
+			}
+			
+			br.close();
+			isr.close();
+			is.close();
+			
+		} catch (NumberFormatException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		this.nodeset = new Node[maxNodeId +1];//old node id
+		this.nodeSum = nodes.size();
+		int point =0;
+		for(int i =0;i < maxNodeId +1; i++){
+			if (i == maxNodeId) {
+				System.out.println();
+			}
+			if(nodes.contains(i)){
+				this.nodeset[i] = new Node();
+				this.nodeset[i].setOrigOrder(i);
+				this.nodeset[i].setNewOrder(point++);
+			}
+		}
+		
+		for(String edge : edgeset){//record original node id
+			String[] e1 = edge.split("\\s+");
+			int origNode1 = Integer.parseInt(e1[0]);
+			int origNode2 = Integer.parseInt(e1[1]);
+			
+			Node node1 = this.nodeset[origNode1];// original node id is recorded in neighbors.
+			Node node2 = this.nodeset[origNode2];
+			node1.addNeighbor(node2);
+			node2.addNeighbor(node1);
+		}
+		allEdges = edgeset.size();
+		
+		Node[] nodeData = new Node[nodes.size()];
+		int deg = 0;
+		int degQuare = 0;
+		for(int i = 0 ; i <= maxNodeId; i++){
+			if (this.nodeset[i] == null)
+				continue;
+			int newId = this.nodeset[i].getNewOrder();
+			int degree = this.nodeset[i].getNeighbors().size();
+			maxdegree = maxdegree > degree ? maxdegree : degree;
+			deg += degree;
+			degQuare += Math.pow(degree, 2);
+			nodeData[newId] = this.nodeset[i];//将original node id 换为new node id。
+		}
+		
+		this.edgeSetEntry = new int[allEdges][2];
+		int count = 0;
+		for(String edge :edgeset){
+			String[] e1 = edge.split("\\s+");
+			int origNode1 = Integer.parseInt(e1[0]);// this is old node id , need to transform
+			int origNode2 = Integer.parseInt(e1[1]);
+			this.edgeSetEntry[count ][0] = this.nodeset[origNode1].getNewOrder();
+			this.edgeSetEntry[count ++][1] = this.nodeset[origNode2].getNewOrder();
+		}
+	
+	}
+	
+	public Node[] getNodeset(){
+		return this.nodeset;
+	}
+	
+	
+	 public void write(double[][] data, String sflie){
+		  try {
+				File fw = new File(sflie);
+				OutputStream outstm = new FileOutputStream(fw);
+				OutputStreamWriter outstmwrite = new OutputStreamWriter(outstm);
+				BufferedWriter bw = new BufferedWriter(outstmwrite);
+				int col = data[0].length;
+				
+				for(int i =0 ; i < col; i ++ ){
+					bw.write( (int)(data[0][i])+ "\t" + data[1][i]);
+	        		bw.write("\n");
+	        	}
+	        	 bw.write("\n");
+	        	 outstmwrite.close();
+	        	 outstm.close();
+	        
+	        } catch (IOException ex) {
+	            ex.printStackTrace();
+	        }
+	 }
+	 
+	 public void write(double[] data, String sflie){
+		  try {
+				File fw = new File(sflie);
+				OutputStream outstm = new FileOutputStream(fw);
+				OutputStreamWriter outstmwrite = new OutputStreamWriter(outstm);
+				BufferedWriter bw = new BufferedWriter(outstmwrite);
+				int col = data.length;
+				
+				for(int i =0 ; i < col; i ++ ){
+					bw.write(  data[i] + "\t");
+	        		bw.write("\n");
+	        	}
+	        	 bw.close();
+	        	 outstmwrite.close();
+	        	 outstm.close();
+	        
+	        } catch (IOException ex) {
+	            ex.printStackTrace();
+	        }
+	 }
+	 
+	 
+	 public void write(HashMap<String, Double> data, String sflie){
+		  try {
+				File fw = new File(sflie);
+				OutputStream outstm = new FileOutputStream(fw,true);//write start with end of file!!!
+				OutputStreamWriter outstmwrite = new OutputStreamWriter(outstm);
+				BufferedWriter bw = new BufferedWriter(outstmwrite);
+				
+				Set<String> keyset = data.keySet();
+				for(String key : keyset){
+					bw.write(key + " \t" + data.get(key) );
+					bw.write("\n");
+				}
+				bw.close();
+	        	outstmwrite.close();
+	        	outstm.close();
+	        
+	        } catch (IOException ex) {
+	            ex.printStackTrace();
+	        }
+	 }
+	 
+	 public void write(ArrayList<Double> data, String sflie){
+		  try {
+				File fw = new File(sflie);
+				OutputStream outstm = new FileOutputStream(fw);
+				OutputStreamWriter outstmwrite = new OutputStreamWriter(outstm);
+				BufferedWriter bw = new BufferedWriter(outstmwrite);
+				int col = data.size();
+				
+				for(int i =0 ; i < col; i ++ ){
+					bw.write( data.get(i) + "\t" );
+	        		bw.write("\n");
+	        	}
+	        	 bw.write("\n");
+	        	 bw.close();
+	        	 outstmwrite.close();
+	        	 outstm.close();
+	        
+	        } catch (IOException ex) {
+	            ex.printStackTrace();
+	        }
+	 }
+	 
+	
+	 public void write(int[] data, String sflie){
+		  try {
+				File fw = new File(sflie);
+				OutputStream outstm = new FileOutputStream(fw);
+				OutputStreamWriter outstmwrite = new OutputStreamWriter(outstm);
+				BufferedWriter bw = new BufferedWriter(outstmwrite);
+				int col = data.length;
+				
+				for(int i =0 ; i < col; i ++ )
+					bw.write(data[i] + "\n");
+	        	 bw.close();
+	        	 outstmwrite.close();
+	        	 outstm.close();
+	        
+	        } catch (IOException ex) {
+	            ex.printStackTrace();
+	        }
+	 }
+	 
+	 public void write(HashSet<String> edgeset, String sflie){
+		  try {
+				File fw = new File(sflie);
+				OutputStream outstm = new FileOutputStream(fw);
+				OutputStreamWriter outstmwrite = new OutputStreamWriter(outstm);
+				BufferedWriter bw = new BufferedWriter(outstmwrite);
+				
+				for(String stredge : edgeset ){
+					String[] e1 = stredge.split("\\s+");
+					int origNode1 = Integer.parseInt(e1[0]);
+					int origNode2 = Integer.parseInt(e1[1]);
+					bw.write(origNode1 + "\t" + origNode2);
+					bw.write("\n");
+					
+				}
+	        	 bw.close();
+	        	 outstmwrite.close();
+	        	 outstm.close();
+	        
+	        } catch (IOException ex) {
+	            ex.printStackTrace();
+	        }
+	 }
+	
+
+}
