@@ -1,0 +1,30 @@
+import java.util.ArrayList;
+
+public class Node {
+	private int order;
+	private int origOrder;
+	private ArrayList<Node> neighbor = new ArrayList<Node>();
+	
+	public void addNeighbor(Node n){
+		this.neighbor.add(n);
+	}
+	public void setOrigOrder(int id){
+		this.origOrder = id;
+	}
+	public int getNeighborsLen(){
+		return this.neighbor.size();
+	}
+	public ArrayList<Node> getNeighbors(){
+		return this.neighbor;
+	}
+	
+	public int getOrigOrder() {
+		return origOrder;
+	}
+	public void setNewOrder(int order) {
+		this.order = order;
+	}
+	public int getNewOrder(){
+		return order;
+	}
+}
