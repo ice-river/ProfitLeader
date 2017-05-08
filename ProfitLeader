@@ -1,0 +1,158 @@
+package uestc.dm.lab;
+
+import java.util.ArrayList;
+import java.util.concurrent.ExecutionException;
+
+public class ProfitLeader {
+	// the file is the standard to compare with others.!!!!
+		Node[] nodeset;
+		int[] rankGame;
+		public double[] value;
+		double[] rankGameValue;
+		double threshold = 0.01;
+		
+		public ProfitLeader(Node[] n){
+			this.nodeset = n;
+		}
+		
+		public int[] getRank(){
+			return this.rankGame;
+		}
+
+		public double[] getRankValue(){
+			return this.rankGameValue;
+		}
+		
+		
+		public void GameCentRun(){
+			double[] payOff = new double[this.nodeset.length]; 
+			for(int n = 0 ; n < this.nodeset.length; n++){
+				Node node = this.nodeset[n];
+				ArrayList<Node> neighs = node.getNeighbors();
+				if( neighs == null)
+					continue;
+				double providResource = 0;
+				for(Node neigh : neighs){
+					ArrayList<ArrayList<Node>> exconex  = new ArrayList<ArrayList<Node>>();
+					exconex = findExConNeigh(node, neigh);
+					ArrayList<Node> exNodeResource = exconex.get(0); // including itself
+					ArrayList<Node> comNeighbors = exconex.get(1);
+					ArrayList<Node> allNeighbors = exconex.get(3); // including all nodes
+					
+					double similarity = (comNeighbors.size())/(double)(allNeighbors.size());
+					int resource = 0;
+					for(Node tn: exNodeResource){
+						resource += tn.getNeighbors().size();
+					}
+					
+					resource += 1;	//add one, meaning itself is a unit resource;
+					providResource += (resource ) *similarity; 
+					
+				}
+				payOff[n] = providResource ;
+			}
+			this.value = payOff.clone();
+			GameReRank(payOff);
+		}
+		
+		
+		public double f_similar(double similar) {
+			double function = Math.tan(similar);
+				return function;
+		}
+		
+		public double f_resource(double resource) {
+			double f_res = Math.pow(resource, 1.5);
+			return f_res;
+		}
+		
+		public void GameReRank(double[] rankValue){
+			int len = rankValue.length;
+			this.rankGame = new int[len];
+			for(int i = 0; i < len; i ++){
+				this.rankGame[i] = i;
+			}
+			
+			sort(rankValue, this.rankGame);
+			
+		}
+		
+		public void sort(double[] rankValue, int[] rank){
+			//form bigger to smaller
+			int nodes = this.nodeset.length;
+			for(int i = 0; i < nodes-1; i ++){
+				for(int j = i+1; j < nodes ; j ++){
+					if(rankValue[j] > rankValue[i]){
+						int tmpid = rank[i];
+						rank[i] = rank[j];
+						rank[j] = tmpid;
+						
+						double tmpval = rankValue[i];
+						rankValue[i] = rankValue[j];
+						rankValue[j] = tmpval;
+					}
+				}
+			}
+			
+			this.rankGame = rank;
+			for(int i = 0 ; i < rank.length; i++){
+				this.rankGame[i] = this.nodeset[rank[i]].getOrigOrder();
+			}
+			
+			this.rankGameValue = rankValue;
+		}
+		
+		
+		public ArrayList<ArrayList<Node>> findExConNeigh(Node n1, Node n2){
+			ArrayList<Node> n1Neigh = n1.getNeighbors();
+			ArrayList<Node> n2Neigh = n2.getNeighbors();
+			
+			ArrayList<Node> comNeighbors = new ArrayList<Node>();
+			comNeighbors.addAll(n1Neigh);
+			comNeighbors.retainAll(n2Neigh);
+			comNeighbors.add(n1);
+			comNeighbors.add(n2);
+			
+			ArrayList<Node> exNodeNeighbors = new ArrayList<Node>();
+			exNodeNeighbors.addAll(n1Neigh);
+			exNodeNeighbors.removeAll(n2Neigh);
+			exNodeNeighbors.remove(n2); // remove the location n2, not the number n2.
+			exNodeNeighbors.add(n1);
+			
+			
+			ArrayList<Node> exNeighNeighbors = new ArrayList<Node>();
+			exNeighNeighbors.addAll(n2Neigh);
+			exNeighNeighbors.removeAll(n1Neigh);
+			exNeighNeighbors.remove(n1);
+			exNeighNeighbors.add(n2);
+			
+			ArrayList<Node> allNeighbors = new ArrayList<>();
+			allNeighbors.addAll(exNodeNeighbors);
+			allNeighbors.addAll(exNeighNeighbors);
+			allNeighbors.addAll(comNeighbors);
+			allNeighbors.remove(n1);
+			allNeighbors.remove(n2);
+			
+			
+			ArrayList<ArrayList<Node>> set = new ArrayList<ArrayList<Node>>();
+			set.add(exNodeNeighbors);
+			set.add(comNeighbors);
+			set.add(exNeighNeighbors);
+			set.add(allNeighbors);
+			return set;
+		}
+		public static void main(String[] args) throws InterruptedException, ExecutionException {
+			// TODO Auto-generated method stub
+			String[] path = new String[1];
+			path[0] = "karate";
+			dealData data = new dealData();
+			for(int i = 0; i < path.length; i++){
+				data.load(path[i] + ".txt");
+				ProfitLeader gc = new ProfitLeader(data.getNodeset());
+				gc.GameCentRun();
+				data.write(gc.getRank(), path[i]+"_rankId.txt");
+				data.write(gc.rankGameValue, path[i]+"_rankValue.txt");
+				System.out.println("ProfitLeader....");
+			}
+		}
+}
